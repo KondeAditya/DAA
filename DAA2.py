@@ -1,42 +1,38 @@
-import heapq
-import itertools
+def build_tree(freq):
+    nodes = [[freq[ch], ch] for ch in freq]     # each node = [weight, data]
+    while len(nodes) > 1:
+        nodes = sorted(nodes, key=lambda x: x[0])
+        left = nodes.pop(0)
+        right = nodes.pop(0)
+        new = [left[0] + right[0], [left, right]]  # merge
+        nodes.append(new)
+    return nodes[0]
 
-def build_huffman_tree(freq):
-    heap = []
-    counter = itertools.count()  # unique sequence count
-    for ch, weight in freq.items():
-        heap.append([weight, next(counter), [ch]])  # add counter as second element
-    heapq.heapify(heap)
 
-    while len(heap) > 1:
-        low = heapq.heappop(heap)
-        high = heapq.heappop(heap)
-        combined_weight = low[0] + high[0]
-        combined_node = [low[2], high[2]]
-        heapq.heappush(heap, [combined_weight, next(counter), combined_node])
-
-    return heap[0]
-
-def assign_codes(node, prefix="", codebook={}):
-    # node is [char] for leaf, or [left, right] for internal node
-    if len(node) == 1 and isinstance(node[0], str):
-        codebook[node[0]] = prefix
+def assign(node, code="", table={}):
+    if isinstance(node[1], str):         # leaf
+        table[node[1]] = code
     else:
-        assign_codes(node[0], prefix + "0", codebook)
-        assign_codes(node[1], prefix + "1", codebook)
-    return codebook
+        left, right = node[1]
+        assign(left, code+"0", table)
+        assign(right, code+"1", table)
+    return table
 
-def huff_en(txt):
+
+def huffman(text):
+    # freq count
     freq = {}
-    for c in txt:
+    for c in text:
         freq[c] = freq.get(c, 0) + 1
 
-    root = build_huffman_tree(freq)
-    codes = assign_codes(root[2])  # Note: root[2] because of tie-breaker
+    # build + assign
+    root = build_tree(freq)
+    codes = assign(root)
 
-    print("Huffman Codes:")
+    # print
     for ch in sorted(codes):
-        print(f"{ch}: {codes[ch]}")
+        print(ch, ":", codes[ch])
 
-txt="abbbbbbcccddddddddee"
-huff_en(txt)
+
+txt = "abbbbbbcccddddddddee"
+huffman(txt)
